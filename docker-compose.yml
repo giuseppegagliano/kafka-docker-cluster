@@ -1,0 +1,111 @@
+version: '3.3'
+
+networks:
+  kafka_example:
+      driver: overlay
+
+services:
+  zookeeper-1:
+      image: confluentinc/cp-zookeeper:5.0.1
+      volumes:
+        - '/volumedockerkafka/zookeeper-1/zookeeper_data:/var/lib/zookeeper:rw'
+        - '/volumedockerkafka/zookeeper-1/zookeeper_etc:/etc/zookeeper:rw'
+      environment:
+        ZOOKEEPER_SERVER_ID: 1
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_SERVERS: 0.0.0.0:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+        ZOOKEEPER_TICK_TIME: 2000
+        ZOOKEEPER_INIT_LIMIT: 5
+        ZOOKEEPER_SYNC_LIMIT: 2
+        ZOOKEEPER_MAX_CLIENT_CNXNS: 200
+      networks:
+      - kafka_example
+
+  zookeeper-2:
+      image: confluentinc/cp-zookeeper:5.0.1
+      volumes:
+        - '/volumedockerkafka/zookeeper-2/zookeeper_data:/var/lib/zookeeper:rw'
+        - '/volumedockerkafka/zookeeper-2/zookeeper_etc:/etc/zookeeper:rw'
+      environment:
+        ZOOKEEPER_SERVER_ID: 2
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;0.0.0.0:2888:3888;zookeeper-3:2888:3888
+        ZOOKEEPER_TICK_TIME: 2000
+        ZOOKEEPER_INIT_LIMIT: 5
+        ZOOKEEPER_SYNC_LIMIT: 2
+        ZOOKEEPER_MAX_CLIENT_CNXNS: 200
+      networks:
+        - kafka_example
+
+  zookeeper-3:
+      image: confluentinc/cp-zookeeper:5.0.1
+      volumes:
+        - '/volumedockerkafka/zookeeper-3/zookeeper_data:/var/lib/zookeeper:rw'
+        - '/volumedockerkafka/zookeeper-3/zookeeper_etc:/etc/zookeeper:rw'
+      environment:
+        ZOOKEEPER_SERVER_ID: 3
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;0.0.0.0:2888:3888
+        ZOOKEEPER_TICK_TIME: 2000
+        ZOOKEEPER_INIT_LIMIT: 5
+        ZOOKEEPER_SYNC_LIMIT: 2
+        ZOOKEEPER_MAX_CLIENT_CNXNS: 200
+      networks:
+        - kafka_example
+
+  message_queue_kafka-1:
+      image: confluentinc/cp-kafka:5.0.1
+      volumes:
+        - '/volumedockerkafka/kafka-1/kafka_data:/var/lib/kafka/data:rw'
+        - '/volumedockerkafka/kafka-1/kafka_etc:/etc/kafka:rw'
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://message_queue_kafka-1:9092
+        KAFKA_SESSION_TIMEOUT_MS: 60000
+        KAFKA_HEARTBEAT_INTERVAL_MS: 20000
+        KAFKA_REBALANCE_TIMEOUT_MS: 300000
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+      networks:
+        - kafka_example
+
+  message_queue_kafka-2:
+      image: confluentinc/cp-kafka:5.0.1
+      volumes:
+        - '/volumedockerkafka/kafka-2/kafka_data:/var/lib/kafka/data:rw'
+        - '/volumedockerkafka/kafka-2/kafka_etc:/etc/kafka:rw'
+      environment:
+        KAFKA_BROKER_ID: 2
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://message_queue_kafka-2:9092
+        KAFKA_SESSION_TIMEOUT_MS: 60000
+        KAFKA_HEARTBEAT_INTERVAL_MS: 20000
+        KAFKA_REBALANCE_TIMEOUT_MS: 300000
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+      networks:
+        - kafka_example
+
+  message_queue_kafka-3:
+      image: confluentinc/cp-kafka:5.0.1
+      volumes:
+        - '/volumedockerkafka/kafka-3/kafka_data:/var/lib/kafka/data:rw'
+        - '/volumedockerkafka/kafka-3/kafka_etc:/etc/kafka:rw'
+      environment:
+        KAFKA_BROKER_ID: 3
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://message_queue_kafka-3:9092
+        KAFKA_SESSION_TIMEOUT_MS: 60000
+        KAFKA_HEARTBEAT_INTERVAL_MS: 20000
+        KAFKA_REBALANCE_TIMEOUT_MS: 300000
+      depends_on:
+        - zookeeper-1
+        - zookeeper-2
+        - zookeeper-3
+      networks:
+        - kafka_example
